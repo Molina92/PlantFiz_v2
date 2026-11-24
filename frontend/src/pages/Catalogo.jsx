@@ -1,61 +1,61 @@
-import React, { useState, useEffect } from "react";
-import ProductCardGaleria from "../components/ProductCardGaleria";
-import { Container, Button } from "react-bootstrap";
-import Categorias from "../components/Categorias";
-import { ENDPOINT } from "../config/constants.js";
+import { useEffect, useState } from "react";
 import axios from "axios";
+import ProductCardGaleria from "../components/ProductCardGaleria";
+import { ENDPOINT } from "../config/constants.js";
 
 const Catalogo = () => {
   const [plantas, setPlantas] = useState([]);
-
-  const fetchPlantas = async () => {
-    try {
-      const { data } = await axios.get(ENDPOINT.getPlantas);
-
-      setPlantas(data.plantas || []);
-
-
-
-    } catch (error) {
-      console.error("Error al obtener las plantas:", error);
-      setPlantas([]);
-    }
-  };
+  const [status, setStatus] = useState("loading");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    fetchPlantas();
-  }, []);
+    const controller = new AbortController();
+
+    axios.get(ENDPOINT.getPlantas, { signal: controller.signal })
+      .then(({ data }) => {
+        if (controller.signal.aborted) return;
+        setPlantas(Array.isArray(data.plantas) ? data.plantas : []);
+        setStatus("ready");
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setStatus("error");
+      });
+
+    return () => controller.abort();
+  }, [attempt]);
+
+  const retry = () => {
+    setStatus("loading");
+    setAttempt((value) => value + 1);
+  };
 
   return (
-    <>
-      <h1 className="d-flex mt-3 align-items-left align-self-sm justify-content-around">
-        Tienda
-      </h1>
-      <Categorias />
-      <Container className="d-flex mt-3 align-items-center align-self-sm-stretch justify-content-around">
-        <Button variant="outline-secondary" className=" buttonfiltros w-50 mx-5" style={{ borderRadius: "5px" }}>
-          <div className="d-flex align-items-center justify-content-evenly">Resultados</div>
-        </Button>
-        <Button variant="outline-secondary" className="buttonfiltros  w-50 mx-5" style={{ borderRadius: "5px" }}>
-          <div className="d-flex align-items-center justify-content-evenly">Filtros</div>
-        </Button>
-      </Container>
-      <Container className="cd-flex mt-3 align-items-center justify-content-around">
-        <div className="card-containerproductos">
-          <div className="row">
-            {Array.isArray(plantas) && plantas.length > 0 ? (
-              plantas.map((planta) => (
-                <div className="col-12 col-md-3" key={planta.id}>
-                  <ProductCardGaleria planta={planta} />
-                </div>
-              ))
-            ) : (
-              <p>No hay productos disponibles.</p>
-            )}
-          </div>
+    <div className="store-page">
+      <header className="store-page-heading">
+        <p className="store-kicker">La colección</p>
+        <h1>Catálogo de plantas</h1>
+        <p className="store-intro">Encuentra el verde que mejor va con tu espacio.</p>
+      </header>
+      {status === "loading" && <p className="store-state" role="status">Cargando plantas…</p>}
+      {status === "error" && (
+        <div className="store-state">
+          <p role="alert">No pudimos cargar el catálogo.</p>
+          <button type="button" className="store-button store-button-outline" onClick={retry}>
+            Volver a intentar
+          </button>
         </div>
-      </Container>
-    </>
+      )}
+      {status === "ready" && (plantas.length > 0 ? (
+        <>
+          <p className="store-product-count" role="status">
+            {plantas.length} {plantas.length === 1 ? "planta disponible" : "plantas disponibles"}
+          </p>
+          <ul className="store-product-grid">
+            {plantas.map((planta) => <ProductCardGaleria key={planta.id} planta={planta} />)}
+          </ul>
+        </>
+      ) : <p className="store-state" role="status">Por ahora no hay plantas en el catálogo.</p>)}
+    </div>
   );
 };
 

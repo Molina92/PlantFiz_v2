@@ -1,36 +1,22 @@
-// ProductCardGaleria.jsx
-import React from 'react';
-import { useNavigate } from "react-router-dom";
-import { FaHeart } from "react-icons/fa";
-import {  Container} from "react-bootstrap";
-import "../../src/components/catalogo.css";
+import { IoArrowForwardOutline } from "react-icons/io5";
+import { Link } from "react-router-dom";
+import PlantImage from "./PlantImage";
+import { formatPrice } from "../utils/formatPrice";
 
-const ProductCardGaleria = ({ planta }) => {
-    const navigate = useNavigate();
-  return (
-    <Container>
-    <div className="card">
-        <img onClick={() => navigate(`/DetalleProducto/${planta.id}`)} className=" cardimg btn p-0 m-0"
-        
-        src={planta.imagen_url} 
-        alt={planta.nombre_planta} 
-        />
-      <div className="card-body d-flex justify-content-between ">
+// eslint-disable-next-line react/prop-types -- The card displays a plant record from the catalog API.
+const ProductCardGaleria = ({ planta: { id, imagen_url, nombre_planta, precio } }) => (
+  <li>
+    <Link className="store-product-card" to={`/DetalleProducto/${id}`}>
+      <PlantImage src={imagen_url} alt="" />
+      <div className="store-product-card-body">
         <div>
-        <h3 className="card-title fw-bolder fs-6">{planta.nombre_planta}</h3>
-        <h5 className="card-text fs-6 fw-light text">
-          <strong>Precio: ${planta.precio.toLocaleString()}</strong>
-        </h5>
+          <h2>{nombre_planta}</h2>
+          <p>{formatPrice(precio)}</p>
         </div>
-        <div className="d-flex align-items-center"> 
-        <FaHeart className="fs-3" /> 
+        <IoArrowForwardOutline aria-hidden="true" />
       </div>
-      </div>
-    </div>
-    </Container>
-   
-  );
-}
+    </Link>
+  </li>
+);
 
-export default ProductCardGaleria;  
-
+export default ProductCardGaleria;

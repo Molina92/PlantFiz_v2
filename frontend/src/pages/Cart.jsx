@@ -1,83 +1,83 @@
-import React, { useContext } from 'react';
-import { Card, Form, Button, Col, Container, Row } from "react-bootstrap";
-import { IoTrashOutline } from "react-icons/io5";
+import { useContext } from "react";
+import { IoArrowBackOutline, IoBagHandleOutline, IoTrashOutline } from "react-icons/io5";
+import { Link } from "react-router-dom";
+import PlantImage from "../components/PlantImage";
 import { CartContext } from "../context/CartContext";
+import { formatPrice } from "../utils/formatPrice";
 
 const Cart = () => {
-    const { cart, addCart, removeFromCart, deletePlanta, total } = useContext(CartContext);
+  const { cart, addCart, removeFromCart, deletePlanta, total } = useContext(CartContext);
+  const itemCount = cart.reduce((count, item) => count + item.count, 0);
 
-    return (
-        <Container fluid className="my-5 px-4">  {/* Cambié a fluid y agregué padding */}
-            <h1 className="text-center my-4">Carrito de Compras</h1>
-
-            {cart.length === 0 ? (
-                <p className="text-center">El carrito está vacío.</p>
-            ) : (
-                <>
-                    {/* Info del carrito */}
-                    <Row className="justify-content-center my-3">  
-                        {cart.map((item) => (
-                            <Col xs={12} key={item.id}>  {/* Ocupar todo el ancho */}
-                                <Card 
-                                    className="w-100 my-3 p-3 shadow-sm" 
-                                    style={{
-                                        width: "100%",  // Ocupar todo el ancho disponible
-                                        maxWidth: "100%",  // Evitar restricciones de Bootstrap
-                                        minWidth: "100%",  // Prevenir que se haga más pequeña
-                                    }}
->
-
-                                    <Row className="align-items-center">  {/* Asegurar buen layout */}
-                                        <Col xs={3} className="text-center">
-                                            <Card.Img
-                                                src={item.imagen_url}
-                                                
-                                                alt={item.nombre_planta}
-                                                style={{ width: "100px", height: "100px", objectFit: "cover" }}
-                                            />
-                                        </Col>
-
-                                        <Col xs={6}>
-                                            <Card.Title>{item.nombre_planta}</Card.Title>
-                                            <div className="d-flex align-items-center">
-                                                <IoTrashOutline />
-                                                <Button 
-                                                    variant="outline-danger" 
-                                                    className="ms-2"
-                                                    onClick={() => deletePlanta(item.id)}
-                                                >
-                                                    QUITAR
-                                                </Button>
-                                            </div>
-                                        </Col>
-
-                                        <Col xs={3} className="text-center">
-                                            <strong className="fs-6">${item.precio.toLocaleString()}</strong>
-                                            <div className="d-flex justify-content-center mt-2">
-                                                <Button variant="outline-secondary" onClick={() => removeFromCart(item.id)}>-</Button>
-                                                <Form.Group className="mx-2">
-                                                    <strong className="fs-6">{item.count}</strong>
-                                                </Form.Group>
-                                                <Button variant="outline-secondary" onClick={() => addCart({ ...item, count: 1 })}>+</Button>
-                                            </div>
-                                        </Col>
-                                    </Row>
-                                </Card>
-                            </Col>
-                        ))}
-                    </Row>
-
-                    {/* Total y Finalizar Compra */}
-                    <div className="text-center my-4">
-                        <h5>Total: ${total.toLocaleString()}</h5>
-                        <Button style={{ background: "#a6bd75", borderBlockColor: "#a6bd75" }} className="mt-3">Finalizar Compra</Button>
-                    </div>
-                </> 
-            )}
-        </Container>
-    );
+  return (
+    <div className="store-page">
+      <header className="store-page-heading">
+        <p className="store-kicker">Tu selección</p>
+        <h1>Tu carrito</h1>
+        {itemCount > 0 && (
+          <p className="store-intro">
+            {itemCount} {itemCount === 1 ? "planta en tu carrito" : "plantas en tu carrito"}
+          </p>
+        )}
+      </header>
+      {cart.length === 0 ? (
+        <div className="store-state store-cart-empty">
+          <IoBagHandleOutline aria-hidden="true" />
+          <h2>Tu carrito está vacío</h2>
+          <p>Explora el catálogo y elige una planta para tu espacio.</p>
+          <Link className="store-button" to="/catalogo">Volver al catálogo</Link>
+        </div>
+      ) : (
+        <div className="store-cart-grid">
+          <section aria-label="Productos en el carrito">
+            <ul className="store-cart-list">
+              {cart.map((item) => (
+                <li className="store-cart-item" key={item.id}>
+                  <PlantImage src={item.imagen_url} alt="" />
+                  <div className="store-cart-item-info">
+                    <Link to={`/DetalleProducto/${item.id}`}>{item.nombre_planta}</Link>
+                    <p>{formatPrice(item.precio)} por unidad</p>
+                    <button
+                      type="button"
+                      className="store-remove"
+                      aria-label={`Quitar ${item.nombre_planta} del carrito`}
+                      onClick={() => deletePlanta(item.id)}
+                    >
+                      <IoTrashOutline aria-hidden="true" /> Quitar
+                    </button>
+                  </div>
+                  <div className="store-stepper" role="group" aria-label={`Cantidad de ${item.nombre_planta}`}>
+                    <button
+                      type="button"
+                      aria-label={`Reducir cantidad de ${item.nombre_planta}`}
+                      onClick={() => removeFromCart(item.id)}
+                    >−</button>
+                    <span aria-live="polite">{item.count}</span>
+                    <button
+                      type="button"
+                      aria-label={`Aumentar cantidad de ${item.nombre_planta}`}
+                      onClick={() => addCart({ ...item, count: 1 })}
+                    >+</button>
+                  </div>
+                  <p className="store-cart-subtotal">{formatPrice(item.precio * item.count)}</p>
+                </li>
+              ))}
+            </ul>
+            <Link className="store-back-link" to="/catalogo">
+              <IoArrowBackOutline aria-hidden="true" /> Seguir explorando
+            </Link>
+          </section>
+          <aside className="store-order" aria-labelledby="store-order-title">
+            <h2 id="store-order-title">Resumen del carrito</h2>
+            <p className="store-order-total" aria-live="polite">
+              <span>Total</span> <strong>{formatPrice(total)}</strong>
+            </p>
+            <p className="store-order-note">El pago en línea aún no está disponible.</p>
+          </aside>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Cart;
-
-

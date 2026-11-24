@@ -1,136 +1,95 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useParams } from 'react-router-dom';
-import ElijePlantfiz from "../components/ElijePlantfiz";
-import Header from "../components/Header";
-import { Col, Row, Container, Button, Badge } from 'react-bootstrap';
-import { IoSunnyOutline, IoWaterOutline } from "react-icons/io5";
-import { LuHouse } from "react-icons/lu";
-import { BiWorld } from "react-icons/bi";
-import { FaHeart } from "react-icons/fa";
+import { useContext, useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import {
+  IoArrowBackOutline, IoBagHandleOutline, IoHomeOutline,
+  IoSunnyOutline, IoWaterOutline,
+} from "react-icons/io5";
+import axios from "axios";
+import PlantImage from "../components/PlantImage";
 import { CartContext } from "../context/CartContext";
 import { ENDPOINT } from "../config/constants.js";
-import axios from "axios";
+import { formatPrice } from "../utils/formatPrice";
 
 const DetalleProducto = () => {
   const { id } = useParams();
   const { addCart, cart } = useContext(CartContext);
-  const [planta, setPlanta] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-
-  const fetchPlanta = async () => {
-    try {
-      const { data } = await axios.get(ENDPOINT.getPlantaPorId(id));
-
-      setPlanta(data.planta);
-    } catch (error) {
-    console.error('Error al obtener planta:', error);
-    setPlanta(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [result, setResult] = useState(null);
 
   useEffect(() => {
-    fetchPlanta();
-  }, []);
+    const controller = new AbortController();
 
-  if (loading) {
-    return <div>Cargando...</div>;
-  }
+    axios.get(ENDPOINT.getPlantaPorId(id), { signal: controller.signal })
+      .then(({ data }) => {
+        if (!controller.signal.aborted) setResult({ id, planta: data.planta });
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) {
+          setResult({ id, error: error.response?.status !== 404 });
+        }
+      });
 
-  if (!planta) {
-    return <div>Planta no encontrada</div>;
-  }
+    return () => controller.abort();
+  }, [id]);
 
-  const getProductCount = (productId) => {
-    const product = cart.find(item => item.id === productId);
-    return product ? product.count : 0;
-  };
-
-  const currentProductCount = getProductCount(planta.id);
+  const planta = result?.id === id ? result.planta : null;
+  const inCart = planta ? (cart.find((item) => item.id === planta.id)?.count ?? 0) : 0;
+  const cuidados = planta ? [
+    { Icon: IoSunnyOutline, titulo: "Luz", valor: planta.luz },
+    { Icon: IoWaterOutline, titulo: "Riego", valor: planta.agua },
+    { Icon: IoHomeOutline, titulo: "Ideal para", valor: planta.ideal_para },
+  ].filter(({ valor }) => valor) : [];
 
   return (
-    <Container>
-      <Row>
-        <Col md={6} className="mt-4 ">
-          <img 
-          src={planta.imagen_url || 'default-image.jpg'} 
-          alt={planta.nombre_planta}
-          style={{ width: "80%", height: "70%", objectFit: "cover", borderRadius: "8px" }} 
-          className="card-img-top rounded ms-5 d-block" />
-          <div className="mt-4 ms-5"> 
-            <FaHeart className="fs-4" /> Guardar como favorito</div>
-        </Col>
-        <Col md={5} className="d-flex justify-content-end ms-4">
-          <div className="card-body">
-            <h2 className="card-title text-start  mt-4 mb-4 fs-4">{planta.nombre_planta}</h2>
-            <h2 className="card-title text-start mt-4 mb-4 fs-6"> <BiWorld className="fs-4" /> Origen: {planta.origen}</h2>
-            <p className="card-text"> <span style={{ fontWeight: "bold" }}>Descripcion de la planta:</span> <br />{planta.descripcion_hojas}</p>
-
-            <h4 className="card-text text-start p-1">
-              <strong className="fs-6"> Precio: ${planta.precio.toLocaleString()}</strong>
-            </h4>
-            <Button 
-              variant="outline-secondary" 
-              className="w-100 me-5 my-5" 
-              style={{ borderRadius: '5px' }} 
-              onClick={() => addCart({ ...planta, count: 1 })}
-            >
-              <div 
-              className="d-flex align-items-center justify-content-evenly">  
-                Añadir al carrito
-                {currentProductCount > 0 && (
-                  <Badge bg="outline-secondary" className="ms-2">
-                    {currentProductCount}
-                  </Badge>
-                )}
-              </div>
-            </Button>
-            <div className="accordion" id="accordionExample">
-              <div className="accordion-item">
-                <h2 className="accordion-header" id="headingOne">
-                  <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                    <LuHouse className="me-2 fs-4" /> Ideal para 
-                  </button>
-                </h2>
-                <div id="collapseOne" className="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                  <div className="accordion-body">
-                    <strong>{planta.ideal_para}</strong>  
-                  </div>
-                </div>
-              </div>
-              <div className="accordion-item">
-                <h2 className="accordion-header" id="headingTwo">
-                  <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                    <IoWaterOutline className="me-2 fs-3" /> Agua
-                  </button>
-                </h2>
-                <div id="collapseTwo" className="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                  <div className="accordion-body">
-                    <strong>{planta.agua}</strong> 
-                  </div>
-                </div>
-              </div>
-              <div className="accordion-item">
-                <h2 className="accordion-header" id="headingThree">
-                  <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                    <IoSunnyOutline className="me-2 fs-3" /> Luz 
-                  </button>
-                </h2>
-                <div id="collapseThree" className="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
-                  <div className="accordion-body">
-                    <strong>{planta.luz}.</strong>
-                  </div>
-                </div>
-              </div>
+    <div className="store-page">
+      <Link className="store-back-link" to="/catalogo">
+        <IoArrowBackOutline aria-hidden="true" /> Volver al catálogo
+      </Link>
+      {result?.id !== id ? (
+        <p className="store-state" role="status">Cargando planta…</p>
+      ) : !planta ? (
+        <div className="store-state">
+          <h1>{result.error ? "No pudimos cargar esta planta" : "Planta no encontrada"}</h1>
+        </div>
+      ) : (
+        <>
+          <div className="store-detail-grid">
+            <PlantImage src={planta.imagen_url} alt={planta.nombre_planta} loading="eager" />
+            <div className="store-detail-copy">
+              <p className="store-kicker">Ficha botánica</p>
+              <h1>{planta.nombre_planta}</h1>
+              {planta.origen && <p className="store-origin">Origen: {planta.origen}</p>}
+              {planta.descripcion_hojas && <p>{planta.descripcion_hojas}</p>}
+              <p className="store-detail-price">{formatPrice(planta.precio)}</p>
+              <button
+                type="button"
+                className="store-button"
+                onClick={() => addCart({ ...planta, count: 1 })}
+              >
+                <IoBagHandleOutline aria-hidden="true" /> Añadir al carrito
+              </button>
+              <p className="store-detail-feedback" role="status">
+                {inCart > 0 && `${inCart} ${inCart === 1 ? "unidad" : "unidades"} en tu carrito.`}
+              </p>
+              {inCart > 0 && <Link className="store-back-link" to="/cart">Ver carrito</Link>}
             </div>
           </div>
-        </Col>
-      </Row>
-      <Header/>
-      <ElijePlantfiz />
-    </Container>
+          {cuidados.length > 0 && (
+            <section className="store-section store-care" aria-labelledby="store-care-title">
+              <p className="store-kicker">Guía de cuidados</p>
+              <h2 id="store-care-title">Cómo cuidar tu planta</h2>
+              <dl className="store-care-grid">
+                {cuidados.map(({ Icon, titulo, valor }) => (
+                  <div key={titulo}>
+                    <dt><Icon aria-hidden="true" /> {titulo}</dt>
+                    <dd>{valor}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+        </>
+      )}
+    </div>
   );
 };
 

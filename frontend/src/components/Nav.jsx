@@ -1,110 +1,60 @@
-import "./Nav.css";
-import { Navbar, Nav, Container, Button, Form } from "react-bootstrap";
 import { useContext } from "react";
-import { FaShoppingCart } from "react-icons/fa";
+import { IoBagHandleOutline, IoPersonOutline } from "react-icons/io5";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
-import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 const CustomNav = () => {
   const { session, handleLogout } = useAuth();
+  const { cart } = useContext(CartContext);
   const navigate = useNavigate();
-  const { total } = useContext(CartContext);
+  const itemCount = cart.reduce((count, item) => count + item.count, 0);
+  const accountPath = session
+    ? session.user?.rol === "admin" ? "/admin/" : "/perfil"
+    : "/login";
 
-  const handleClickLogout = () => {
+  const logout = () => {
     handleLogout();
     navigate("/");
   };
 
-  const handleClickLogin = () => {
-    navigate("/login");
-  };
-
   return (
-    <>
-      {/* Barra superior */}
-      <Navbar
-        expand="lg"
-        className="border-bottom mb-4"
-        style={{ background: "#c4bbdd" }}
-      >
-        <Container>
-          <Nav>
-            <Nav.Link as={Link} to="/" className="nav-link-custom">
-              Home
-            </Nav.Link>
-            <Nav.Link as={Link} to="/catalogo" className="nav-link-custom">
-              Cat&aacute;logo
-            </Nav.Link>
-
-            {session && (
-              <Nav.Link
-                onClick={() =>
-                  navigate(
-                    session?.user?.rol === "admin" ? "/admin/" : "/perfil"
-                  )
-                }
-                className="nav-link-custom"
-              >
-                Perfil
-              </Nav.Link>
-            )}
-          </Nav>
-          <div className="d-flex align-items-center gap-3">
-            {session ? (
-              <Button className="custom-primary" onClick={handleClickLogout}>
-                Cerrar Sesi&oacute;n
-              </Button>
-            ) : (
-              <Button className="custom-primary" onClick={handleClickLogin}>
-                Iniciar Sesi&oacute;n
-              </Button>
-            )}
-
-            <Button className="custom-primary" as={Link} to="/cart">
-              <FaShoppingCart className="me-1 mb-1" /> Cart: ${total.toLocaleString()}
-            </Button>
-          </div>
-        </Container>
-      </Navbar>
-
-      {/* Barra inferior */}
-      <Container className="d-flex mt-3 p-3 align-items-center justify-content-around">
-        <div className="">
-          {/* Logo */}
-          <div className="me-4" style={{ width: "120px", height: "120px" }}>
-            <img
-              src={"/images/logo_plantfiz.png"}
-              alt="Logo PlantFiz"
-              className="img-fluid rounded mt-2"
-            />
-          </div>
+    <div className="store-nav">
+      <div className="store-shell store-nav-inner">
+        <Link className="store-brand" to="/" aria-label="PlantFiz, inicio">
+          <img src="/images/logo_plantfiz.png" alt="" width="38" height="38" />
+          <span>PlantFiz</span>
+        </Link>
+        <nav className="store-nav-links" aria-label="Navegación principal">
+          <NavLink className="store-nav-home" to="/" end>Inicio</NavLink>
+          <NavLink to="/catalogo">Catálogo</NavLink>
+        </nav>
+        <div className="store-nav-actions">
+          <Link
+            className="store-nav-icon"
+            to={accountPath}
+            aria-label={session ? "Mi cuenta" : "Iniciar sesión"}
+          >
+            <IoPersonOutline aria-hidden="true" />
+            <span className="store-nav-label">{session ? "Mi cuenta" : "Iniciar sesión"}</span>
+          </Link>
+          {session && (
+            <button type="button" className="store-logout" onClick={logout}>
+              Cerrar sesión
+            </button>
+          )}
+          <NavLink
+            className="store-nav-icon store-nav-cart"
+            to="/cart"
+            aria-label={`Carrito: ${itemCount} ${itemCount === 1 ? "planta" : "plantas"}`}
+          >
+            <IoBagHandleOutline aria-hidden="true" />
+            <span className="store-nav-label">Carrito</span>
+            <span className="store-cart-count" aria-hidden="true">{itemCount}</span>
+          </NavLink>
         </div>
-        <div></div>
-        <div className="d-flex w-50 text-center">
-          {/* Sección derecha */}
-          <div className="flex-grow-1 w-100">
-            <div
-              className="mb-2"
-              style={{
-                background: "#c4bbdd",
-                padding: "5px",
-                borderRadius: "5px",
-              }}
-            >
-              Links Despacho
-            </div>
-            <Form className="d-flex text-center">
-              <Form.Control
-                type="text"
-                placeholder="Buscar..."
-                className="p-2"
-              />
-            </Form>
-          </div>
-        </div>
-      </Container>
-    </>
+      </div>
+    </div>
   );
 };
 
