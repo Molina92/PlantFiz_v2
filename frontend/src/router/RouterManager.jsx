@@ -35,6 +35,9 @@ export const RouterManager = () => {
           <Route path="/DetalleProducto/:id" element={<DetalleProducto />} />
           {/* Aquí va el detalle de producto del usuario(cliente) */}
           <Route path="/cart" element={<Cart />} />
+          {/* Rutas de autenticación con MainLayout */}
+          <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
 
           {/* Seccion de usuario como ruta hija */}
           <Route
@@ -57,10 +60,6 @@ export const RouterManager = () => {
             <Route path="favorites" element={"<UserFavorites />"} />
           </Route>
         </Route>
-
-        {/* Rutas de Autenticación sin Layout */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
 
         {/* Rutas de Admin (Protegidas) con AdminLayout */}
         <Route

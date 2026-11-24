@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { Form, Button, Container, Nav } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Form } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 import { ENDPOINT } from "../config/constants";
 import axios from "axios";
 
 export const LoginForm = () => {
-  const { session ,handleSession } = useAuth();
+  const { handleSession } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -45,55 +44,43 @@ export const LoginForm = () => {
   };
 
   return (
-    <>
-      <Container className="p-5 my-5">
-        <Container className="d-flex flex-column align-items-center">
-          <h2 className="mb-4">Iniciar Sesión</h2>
-        </Container>
-        <Container className="d-flex flex-column align-items-center mt-4">
-          <Form
-            className="w-50 border p-4 rounded shadow-sm"
-            onSubmit={handleSubmit}
-          >
-            <Form.Group controlId="formCorreo" className="mb-3">
-              <Form.Label>Correo</Form.Label>
-              <Form.Control
-                type="email"
-                name="correo"
-                value={formData.correo}
-                onChange={handleOnChange}
-                required
-              />
-            </Form.Group>
+    <div className="store-login-body">
+      <Form className="store-login-form" onSubmit={handleSubmit}>
+        <Form.Group controlId="formCorreo">
+          <Form.Label>Correo electrónico</Form.Label>
+          <Form.Control
+            type="email"
+            name="correo"
+            autoComplete="username"
+            value={formData.correo}
+            onChange={handleOnChange}
+            required
+          />
+        </Form.Group>
 
-            <Form.Group controlId="formContrasena" className="mb-3">
-              <Form.Label>Contraseña</Form.Label>
-              <Form.Control
-                type="password"
-                name="contrasena"
-                value={formData.contrasena}
-                onChange={handleOnChange}
-                required
-              />
-            </Form.Group>
+        <Form.Group controlId="formContrasena">
+          <Form.Label>Contraseña</Form.Label>
+          <Form.Control
+            type="password"
+            name="contrasena"
+            autoComplete="current-password"
+            value={formData.contrasena}
+            onChange={handleOnChange}
+            required
+          />
+        </Form.Group>
 
-            <Button variant="dark" type="submit" className="w-100">
-              Entrar
-            </Button>
-
-            {error && (
-              <Container className="alert alert-danger mt-3" role="alert">
-                Credenciales incorrectas, intente de nuevo
-              </Container>
-            )}
-          </Form>
-          <p className="mt-3 text-center p-3 d-flex flex-column">
-            ¿No tienes cuenta?{" "}
-            <Link to="/register">Registrate</Link> <br />
-            <Nav.Link as={Link} to="/">Ir a la página principal</Nav.Link>
+        {error && (
+          <p className="store-login-error" role="alert">
+            Credenciales incorrectas. Inténtalo de nuevo.
           </p>
-        </Container>
-      </Container>
-    </>
+        )}
+
+        <button className="store-button" type="submit">Entrar</button>
+      </Form>
+      <p className="store-login-register">
+        ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
+      </p>
+    </div>
   );
 };

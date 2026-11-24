@@ -429,6 +429,73 @@
 }
 
 .store-order-note { margin: 0; color: var(--store-muted); font-size: .9rem; }
+.store-login {
+  width: min(100%, 29rem);
+  margin-inline: auto;
+  border: 1px solid var(--store-line);
+  border-radius: 1rem;
+  background: var(--store-paper);
+}
+
+.store-login-heading,
+.store-login-body {
+  padding: clamp(1.15rem, 4vw, 2rem);
+}
+
+.store-login-heading {
+  border-bottom: 1px solid var(--store-line);
+  border-radius: calc(1rem - 1px) calc(1rem - 1px) 0 0;
+  background: var(--store-sage);
+  text-align: center;
+}
+
+.store-login-icon {
+  display: inline-grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  margin-bottom: .75rem;
+  border-radius: 50%;
+  background: var(--store-paper);
+  color: var(--store-forest);
+  font-size: 1.4rem;
+}
+
+.store-login .store-kicker { justify-content: center; margin-bottom: .55rem; }
+.store-login h1 { margin-bottom: .55rem; font-size: clamp(2rem, 6vw, 3rem); }
+.store-login-intro, .store-login-register { margin: 0; color: var(--store-muted); }
+.store-login-form { display: grid; gap: 1rem; }
+.store-login-form .form-label { margin-bottom: .35rem; color: var(--store-forest); font-weight: 650; }
+
+.store-login-form .form-control {
+  min-height: 2.75rem;
+  border-color: #7c8b80;
+  border-radius: .5rem;
+  color: var(--store-text);
+}
+
+.store-login-form .form-control:focus {
+  border-color: var(--store-forest);
+  outline: 2px solid var(--store-forest);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.store-login-form .store-button { width: 100%; }
+.store-login-register { margin-top: 1rem; text-align: center; }
+.store-login-register a { color: var(--store-forest); font-weight: 650; text-underline-offset: .2em; }
+.store-login-register a:hover { color: var(--store-clay-dark); }
+
+.store-login-error {
+  margin: 0;
+  padding: .65rem .8rem;
+  border-inline-start: 3px solid var(--store-clay-dark);
+  border-radius: .3rem;
+  background: #f8ebe5;
+  color: var(--store-clay-dark);
+  font-size: .9rem;
+}
+
 .store-footer { background: var(--store-forest); color: var(--store-paper); }
 
 .store-footer-inner {
