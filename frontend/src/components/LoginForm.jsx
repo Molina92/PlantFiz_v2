@@ -2,25 +2,37 @@ import { useState } from "react";
 import { Form } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useFieldValidation } from "../hooks/useFieldValidation";
 import { ENDPOINT } from "../config/constants";
 import axios from "axios";
+
+const requiredMessages = {
+  correo: "Ingresa tu correo electrónico.",
+  contrasena: "Ingresa tu contraseña.",
+};
 
 export const LoginForm = () => {
   const { handleSession } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const { fieldErrors, revalidateField, validateFields } = useFieldValidation(requiredMessages);
   const [formData, setFormData] = useState({
     correo: "",
     contrasena: "",
   });
 
   const handleOnChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const input = e.currentTarget;
+    const { name, value } = input;
+    setFormData((previous) => ({ ...previous, [name]: value }));
+    revalidateField(input);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!validateFields(e.currentTarget)) return;
 
     try {
       const { data } = await axios.post(ENDPOINT.login, formData);
@@ -45,7 +57,7 @@ export const LoginForm = () => {
 
   return (
     <div className="store-login-body">
-      <Form className="store-login-form" onSubmit={handleSubmit}>
+      <Form className="store-login-form" noValidate onSubmit={handleSubmit}>
         <Form.Group controlId="formCorreo">
           <Form.Label>Correo electrónico</Form.Label>
           <Form.Control
@@ -54,8 +66,16 @@ export const LoginForm = () => {
             autoComplete="username"
             value={formData.correo}
             onChange={handleOnChange}
+            isInvalid={Boolean(fieldErrors.correo)}
+            aria-invalid={Boolean(fieldErrors.correo)}
+            aria-describedby={fieldErrors.correo ? "formCorreoError" : undefined}
             required
           />
+          {fieldErrors.correo && (
+            <Form.Control.Feedback type="invalid" id="formCorreoError" role="alert">
+              {fieldErrors.correo}
+            </Form.Control.Feedback>
+          )}
         </Form.Group>
 
         <Form.Group controlId="formContrasena">
@@ -66,8 +86,16 @@ export const LoginForm = () => {
             autoComplete="current-password"
             value={formData.contrasena}
             onChange={handleOnChange}
+            isInvalid={Boolean(fieldErrors.contrasena)}
+            aria-invalid={Boolean(fieldErrors.contrasena)}
+            aria-describedby={fieldErrors.contrasena ? "formContrasenaError" : undefined}
             required
           />
+          {fieldErrors.contrasena && (
+            <Form.Control.Feedback type="invalid" id="formContrasenaError" role="alert">
+              {fieldErrors.contrasena}
+            </Form.Control.Feedback>
+          )}
         </Form.Group>
 
         {error && (

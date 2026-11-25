@@ -481,6 +481,9 @@
   box-shadow: none;
 }
 
+.store-login-form .form-control.is-invalid { border-color: var(--store-clay-dark); }
+.store-login-form .invalid-feedback { color: var(--store-clay-dark); }
+
 .store-login-form .store-button { width: 100%; }
 .store-login-register { margin-top: 1rem; text-align: center; }
 .store-login-register a { color: var(--store-forest); font-weight: 650; text-underline-offset: .2em; }

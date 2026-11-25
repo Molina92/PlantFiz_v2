@@ -1,17 +1,27 @@
 import { useState } from "react";
-import { Form, Button, Container, Nav } from "react-bootstrap";
-import { useAuth } from "../hooks/useAuth";
+import { Form } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import { ENDPOINT } from "../config/constants";
 import axios from "axios";
+import { useAuth } from "../hooks/useAuth";
+import { useFieldValidation } from "../hooks/useFieldValidation";
+import { ENDPOINT } from "../config/constants";
 
+const fields = [
+  { name: "rut", label: "RUT", type: "text", requiredMessage: "Ingresa tu RUT." },
+  { name: "nombre", label: "Nombres", type: "text", autoComplete: "given-name", requiredMessage: "Ingresa tus nombres." },
+  { name: "apellido", label: "Apellidos", type: "text", autoComplete: "family-name", requiredMessage: "Ingresa tus apellidos." },
+  { name: "correo", label: "Correo electrónico", type: "email", autoComplete: "username", requiredMessage: "Ingresa tu correo electrónico." },
+  { name: "contrasena", label: "Contraseña", type: "password", autoComplete: "new-password", requiredMessage: "Ingresa tu contraseña." },
+  { name: "telefono", label: "Teléfono", type: "tel", autoComplete: "tel", requiredMessage: "Ingresa tu teléfono." },
+];
 
+const requiredMessages = Object.fromEntries(fields.map(({ name, requiredMessage }) => [name, requiredMessage]));
 
 export const RegisterForm = () => {
   const { handleSession } = useAuth();
   const navigate = useNavigate();
-  const [error, setError] = useState('');
-
+  const [error, setError] = useState("");
+  const { fieldErrors, revalidateField, validateFields } = useFieldValidation(requiredMessages);
   const [formData, setFormData] = useState({
     rut: "",
     nombre: "",
@@ -19,123 +29,66 @@ export const RegisterForm = () => {
     correo: "",
     contrasena: "",
     telefono: "",
-    rol: "user"
+    rol: "user",
   });
 
-  const handleOnChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleOnChange = (event) => {
+    const input = event.currentTarget;
+    const { name, value } = input;
+    setFormData((previous) => ({ ...previous, [name]: value }));
+    revalidateField(input);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    if (!validateFields(event.currentTarget)) return;
 
     try {
       const { data } = await axios.post(ENDPOINT.register, formData);
-
-      handleSession({
-        token: data.token,
-        user: data.user
-      });
-
+      handleSession({ token: data.token, user: data.user });
       navigate("/login");
-
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Error al registrar usuario';
-      setError(errorMessage);
+      setError(error.response?.data?.message || "Error al registrar usuario");
     }
   };
 
   return (
-    <>
-      <Container className="p-5 my-5">
-        <Container className="d-flex flex-column align-items-center">
-          <h2 className="mb-4">Registro de Usuario</h2>
-        </Container>
-        <Container className="d-flex flex-column align-items-center mt-4">
-          <Form
-            className="w-50 border p-4 rounded shadow-sm"
-            onSubmit={handleSubmit}
-          >
-            <Form.Group controlId="formRut" className="mb-3">
-              <Form.Label>RUT</Form.Label>
+    <div className="store-login-body">
+      <Form className="store-login-form" noValidate onSubmit={handleSubmit}>
+        {fields.map(({ name, label, type, autoComplete }) => {
+          const id = `register-${name}`;
+          const message = fieldErrors[name];
+
+          return (
+            <Form.Group controlId={id} key={name}>
+              <Form.Label>{label}</Form.Label>
               <Form.Control
-                type="text"
-                name="rut"
-                value={formData.rut}
+                type={type}
+                name={name}
+                autoComplete={autoComplete}
+                value={formData[name]}
                 onChange={handleOnChange}
+                isInvalid={Boolean(message)}
+                aria-invalid={Boolean(message)}
+                aria-describedby={message ? `${id}-error` : undefined}
                 required
               />
+              {message && (
+                <Form.Control.Feedback type="invalid" id={`${id}-error`} role="alert">
+                  {message}
+                </Form.Control.Feedback>
+              )}
             </Form.Group>
+          );
+        })}
 
-            <Form.Group controlId="formNombre" className="mb-3">
-              <Form.Label>Nombres</Form.Label>
-              <Form.Control
-                type="text"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleOnChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group controlId="formApellido" className="mb-3">
-              <Form.Label>Apellidos</Form.Label>
-              <Form.Control
-                type="text"
-                name="apellido"
-                value={formData.apellido}
-                onChange={handleOnChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group controlId="formCorreo" className="mb-3">
-              <Form.Label>Correo</Form.Label>
-              <Form.Control
-                type="email"
-                name="correo"
-                value={formData.correo}
-                onChange={handleOnChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group controlId="formContrasena" className="mb-3">
-              <Form.Label>Contraseña</Form.Label>
-              <Form.Control
-                type="password"
-                name="contrasena"
-                value={formData.contrasena}
-                onChange={handleOnChange}
-                required
-              />
-            </Form.Group>
-
-            <Form.Group controlId="formTelefono" className="mb-3">
-              <Form.Label>Teléfono</Form.Label>
-              <Form.Control
-                type="text"
-                name="telefono"
-                value={formData.telefono}
-                onChange={handleOnChange}
-                required
-              />
-            </Form.Group>
-
-            {error && <div className="alert alert-danger">{error}</div>}
-
-            <Button variant="dark" type="submit" className="w-100">
-              Crear Cuenta
-            </Button>
-          </Form>
-          <p className="mt-3 text-center p-3 d-flex flex-column">
-            ¿Ya tienes cuenta?{" "}
-            <Link to="/login">Iniciar sesión</Link> <br />
-            <Nav.Link as={Link} to="/">Ir a la página principal</Nav.Link>
-          </p>
-        </Container>
-      </Container>
-    </>
+        {error && <p className="store-login-error" role="alert">{error}</p>}
+        <button className="store-button" type="submit">Crear cuenta</button>
+      </Form>
+      <p className="store-login-register">
+        ¿Ya tienes cuenta? <Link to="/login">Iniciar sesión</Link>
+      </p>
+    </div>
   );
 };
